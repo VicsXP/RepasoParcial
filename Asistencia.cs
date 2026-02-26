@@ -10,11 +10,11 @@ namespace RepasoParcial
     {
         int noEmpleado;
         int horasTrabajadas;
-        int mes;
+        string mes;
 
         public int NoEmpleado { get => noEmpleado; set => noEmpleado = value; }
         public int HorasTrabajadas { get => horasTrabajadas; set => horasTrabajadas = value; }
-        public int Mes { get => mes; set => mes = value; }
+        public string Mes { get => mes; set => mes = value; }
 
     }
 }

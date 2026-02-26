@@ -14,6 +14,7 @@ namespace RepasoParcial
     public partial class Form1 : Form
     {
         List<Empleado> empleados = new List<Empleado>();
+        List<Asistencia> asistencias = new List<Asistencia>();
         public Form1()
         {
             InitializeComponent();
@@ -22,41 +23,39 @@ namespace RepasoParcial
         {
 
             string fileName = @"Empleados.txt";
-            if (!File.Exists(fileName))
+            if (File.Exists(fileName))
             {
-
-                FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
-                StreamReader reader = new StreamReader(stream);
-
-                while (reader.Peek() > -1)
+                using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+                using (StreamReader reader = new StreamReader(stream))
                 {
-                    //Lee 1 empleado del archivo en cada vuelta del ciclo
-                    Empleado empleado = new Empleado();
-                    empleado.NoEmpleado = Convert.ToInt16(reader.ReadLine());
-                    empleado.Nombre = reader.ReadLine();
-                    empleado.Apellido = reader.ReadLine();
-                    empleado.SueldoHora = Convert.ToDecimal(reader.ReadLine());
+                    while (reader.Peek() > -1)
+                    {
+                        //Lee 1 empleado del archivo en cada vuelta del ciclo
+                        Empleado empleado = new Empleado();
+                        empleado.NoEmpleado = Convert.ToInt16(reader.ReadLine());
+                        empleado.Nombre = reader.ReadLine();
+                        empleado.Apellido = reader.ReadLine();
+                        empleado.SueldoHora = Convert.ToDecimal(reader.ReadLine());
 
-                    //Guardar el empleado en la lista
-                    empleados.Add(empleado);
-
+                        //Guardar el empleado en la lista
+                        empleados.Add(empleado);
+                    }
                 }
-                reader.Close();
-
             }
         }
         private void GuardarEmpleado()
         {
-            FileStream stream = new FileStream(@"Empleados.txt", FileMode.OpenOrCreate, FileAccess.Write);
-            StreamWriter writer = new StreamWriter(stream);
-            foreach (var empleado in empleados)
+            using (FileStream stream = new FileStream(@"Empleados.txt", FileMode.Create, FileAccess.Write))
+            using (StreamWriter writer = new StreamWriter(stream))
             {
-                writer.WriteLine(empleado.NoEmpleado);
-                writer.WriteLine(empleado.Nombre);
-                writer.WriteLine(empleado.Apellido);
-                writer.WriteLine(empleado.SueldoHora);
+                foreach (var empleado in empleados)
+                {
+                    writer.WriteLine(empleado.NoEmpleado);
+                    writer.WriteLine(empleado.Nombre);
+                    writer.WriteLine(empleado.Apellido);
+                    writer.WriteLine(empleado.SueldoHora);
+                }
             }
-            writer.Close();
         }
 
         private void Mostrar()
@@ -87,6 +86,59 @@ namespace RepasoParcial
 
             //Mostrar en pantalla
             Mostrar();
+        }
+
+        List<EmpleadosSueldo> CalcularSueldos()
+        {
+            var resultado =
+                from a in asistencias
+                join e in empleados
+                on a.NoEmpleado equals e.NoEmpleado
+                select new EmpleadosSueldo
+                {
+                    NombreCompleto = e.Nombre + " " + e.Apellido,
+                    Mes = a.Mes,
+                    HorasTrabajadas = a.HorasTrabajadas,
+                    SueldoMensual = a.HorasTrabajadas * e.SueldoHora
+                };
+
+            return resultado.ToList();
+        }
+
+        private void textBoxNombre_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void GuardarAsistencia()
+        {
+            using (FileStream stream = new FileStream("Asistencias.txt", FileMode.Create, FileAccess.Write))
+            using (StreamWriter writer = new StreamWriter(stream))
+            {
+                foreach (var a in asistencias)
+                {
+                    writer.WriteLine(a.NoEmpleado);
+                    writer.WriteLine(a.HorasTrabajadas);
+                    writer.WriteLine(a.Mes);
+                }
+            }
+        }
+        private void buttonGuardarAsistencia_Click(object sender, EventArgs e)
+        {
+
+            Asistencia a = new Asistencia();
+
+            a.NoEmpleado = (int)numericUpDownNumEmpleado.Value;
+            a.HorasTrabajadas = (int)numericUpDownHoras.Value;
+            a.Mes = textBoxMes.Text;
+
+            asistencias.Add(a);
+
+            GuardarAsistencia();
+        }
+        private void MostrarSueldos()
+        {
+            dataGridView1.DataSource = null;
+            dataGridView1.DataSource = CalcularSueldos();
         }
     }
 }
